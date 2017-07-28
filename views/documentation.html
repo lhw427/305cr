@@ -1,0 +1,719 @@
+
+
+<html><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+  <body><section class="projects section">
+    <div class="section-inner col-lg-12">
+
+        <div class="content apiBox" style="background: #EEE;">
+          <h3 class="heading">Package.json</h3>
+          <font size="4" style=""><p>Stores all the dependencies required for the server</p></font>
+          <pre>
+            {
+              "name": "AntiDrug",
+              "version": "1.0.0",
+              "description": "This anti-drug abuse website is built with Hapi, Hapi-auth-cookie, and Mongoose with Youtube Data API and Google Map API",
+              "main": "server.js",
+              "scripts": {
+              "test": "echo \"Error: no test specified\" && exit 1"
+              },
+              "author": "Joe Leung",
+              "dependencies": {
+                "ejs": "*",
+                "hapi": "^10.4.0",
+                "hapi-auth-cookie": "^5.1.0",
+                "joi": "^7.0.0",
+                "mongoose": "^5.0.0",
+                "passport-local-mongoose": "^4.0.0",
+                "vision": "^4.0.0",
+                "inert":"*",
+                "nodemailer":"*",
+                "jsonfile":"*"
+              }
+            }
+          </pre>
+          <hr>
+          <h3 class="heading">CONFIG JS</h3>
+          <font size="4" style=""><p>Stores the server and database configuration</p></font>
+          <pre>module.exports = {
+          	server: {
+              host: '127.0.0.1',
+              port: process.env.PORT || 8888
+            },
+            mongo: {
+            	host: '127.0.0.1',
+              port: 27017,
+              db: 'AntiDrugAbuse',
+              username: 'jl',
+              password: '123456',
+              url : 'mongodb://<user>:<password>@<url>'
+            }
+          };
+          </pre>
+          <hr>
+
+          <h3 class="heading">Server.js</h3>
+          <font size="4" style=""><p>Starts the server</p></font>
+          <pre>var Hapi = require('hapi');
+          var Routes = require('./routes');
+          var Config = require('./config');
+          //var io = require('socket.io';)(server.listener);
+          // var User = require('./models/user').User;
+
+          // Create a server with a host and port
+          var server = new Hapi.Server();
+          server.connection({ port: Config.server.port });
+
+
+
+          // Register the plugin
+          server.register([require('hapi-auth-cookie'), require('vision'), require('inert')], function (err) {
+
+              if (err) {
+                  throw err;
+              }
+
+              // Set our strategy
+              server.auth.strategy('session', 'cookie', {
+                  password: 'worldofwalmart', // cookie secret
+                  cookie: 'session', // Cookie name
+                  isSecure: false, // required for non-https applications
+                  ttl: 24* 60 * 60 * 1000 // Set session to 1 day
+              });
+
+              // Set our view engine, we'll use ejs
+              server.views({
+                  engines: { html: require('ejs') },
+                  relativeTo: __dirname,
+                  path: __dirname + '/views'
+              });
+          });
+
+          // Print some information about the incoming request for debugging purposes
+          server.ext('onRequest', function (request, reply) {
+              console.log(request.path, request.query);
+              return reply.continue();
+          });
+
+          server.route(Routes.endpoints);
+
+          // Start the server
+          server.start(function() {
+              console.log("The server has started on port: " + server.info.port);
+          });
+
+          </pre>
+          <hr>
+          <h3 class="heading">Mongodb JS</h3>
+            <font size="4" style=""><p>Starts up the database</p></font>
+          <pre>var Mongoose = require('mongoose');
+          var Config = require('./config');
+
+          Mongoose.Promise = global.Promise;
+          Mongoose.connect('mongodb://' + Config.mongo.host + '/' + Config.mongo.db);
+          //Mongoose.connect('mongodb://' + config.database.host + '/' + config.database.db);
+          var db = Mongoose.connection;
+          db.on('error', console.error.bind(console, 'connection error'));
+          db.once('open', function callback() {
+            console.log("Connection with database succeeded.");
+          });
+
+          exports.Mongoose = Mongoose;
+          exports.db = db;
+
+          </pre>
+          <hr>
+
+          <h3 class="heading">Routes JS</h3>
+          <pre>
+            var Pages = require('./pages');
+            var Static = require('./static');
+            var Authentication = require('./authentication');
+
+            /**
+             * Contains the list of all routes, i.e. methods, paths and the config functions
+             * that take care of the actions
+             */
+            exports.endpoints = [
+
+            //routes to dynamic pages
+            	//loads different search pages for visitors and members respectively
+            	{ method: 'GET',  path: '/videosearch', 	 config: Pages.videosearch},
+
+            	//for members login
+            	{ method: 'GET',   path: '/login',          	config: Pages.login},
+            	{ method: 'POST',   path: '/login',          config: Authentication.login},
+
+            	//for members registration
+            	{ method: 'GET',   path: '/register',      	config: Pages.register},
+            	{ method: 'POST',   path: '/register',       config: Authentication.register},
+
+            	//for email verfication
+            	{ method: 'GET',   path: '/verify/{vericode*}',        config: Pages.verify},
+            	{ method: 'POST',   path: '/verify/verify',   config: Authentication.Verification },
+
+            	//loads when user logged in successfully
+            	{ method: 'GET',   path: '/success', 		config: Pages.secret   	},
+
+            //retrieve items from fav list
+            	{ method: 'GET',  path: '/editfavlist/', config: Authentication.editfavlist},
+            	//add/remove items in fav list
+            	{ method: 'PUT',   path: '/removefavlist/{videoId*}',  config: Authentication.removefav },
+            	{ method: 'PUT',   path: '/addfavlist/{videoId*}',  config: Authentication.addfav },
+
+            	{ method: 'GET',    path: '/logout',         		config: Authentication.logout },
+
+
+            	//routes to static pages
+            	{ method: 'GET',    path: '/',               	 config: Pages.index  	},
+            	{ method: 'GET',  path: '/public/{param*}',    config: Static.public 	},
+            	{ method: 'GET',  path: '/member', 			config: Static.member 	},
+            	{ method: 'GET',  path: '/doc', 				config: Static.doc },
+            	{ method: 'GET',  path: '/apiendpoints',		config: Static.apiendpoints },
+            	{ method: 'GET',  path: '/main', 			config: Static.main	},
+            	{ method: 'GET',  path: '/tab1', 		  config: Static.tab1},
+            	{ method: 'GET',  path: '/tab2', 			config: Static.tab2},
+            	{ method: 'GET',  path: '/tab3', 			config: Static.tab3},
+            	{ method: 'GET',  path: '/tab4', 			config: Static.tab4},
+            	{ method: 'GET',  path: '/video', 		config: Static.video},
+
+            	//loads Google map API
+            	{ method: 'GET',  path: '/map', 				 config: Static.map},
+            	{ method: 'GET',  path: '/map1', 				config: Static.map1},
+            	{ method: 'GET',  path: '/map2', 				config: Static.map2},
+            	{ method: 'GET',  path: '/map3', 				config: Static.map3},
+            	{ method: 'GET',  path: '/map4', 				config: Static.map4},
+            	{ method: 'GET',  path: '/map5', 				config: Static.map5},
+            	{ method: 'GET',  path: '/map6', 				config: Static.map6},
+            ];
+
+          </pre>
+          <hr>
+
+          <h3 class="heading">Static JS (controller 1)</h3>
+            <font size="4" style=""><p>Handlers to routes of static contents</p></font>
+          <pre>'use strict';
+
+          //loads mimetype files
+          exports.public = {
+            handler: {
+              directory: {
+                  path: './public',
+                  listing: false,
+                  index: false
+              }
+          }
+          };
+
+          exports.main = {
+                    handler: function (request, reply) {
+                    return reply.view('main');
+                    }
+                  };
+
+          exports.tab1 = {
+                            handler: function (request, reply) {
+                            return reply.view('tab1');
+                            }
+                          };
+
+          exports.tab2 = {
+                          handler: function (request, reply) {
+                          return reply.view('tab2');
+                          }
+                                          };
+
+          exports.tab3 = {
+                          handler: function (request, reply) {
+                          return reply.view('tab3');
+                            }
+                                                          };
+          exports.tab4 = {
+                          handler: function (request, reply) {
+                          return reply.view('tab4');
+                          }
+                        };
+          exports.video = {
+                            handler: function (request, reply) {
+                            return reply.view('video');
+                            }
+                        };
+
+          //the following handles routing to static pages
+          exports.home = {
+                handler: function (request, reply) {
+                return reply.view('home');
+                }
+              };
+
+          exports.member = {
+                        handler: function (request, reply) {
+                        return reply.view('memberzone');
+                        }
+                      };
+
+          exports.contact = {
+                            handler: function (request, reply) {
+                            return reply.view('contact');
+                            }
+                          };
+
+          exports.doc = {
+                            handler: function (request, reply) {
+                            return reply.view('documentation');
+                            }
+                        };
+
+          exports.apiendpoints = {
+                            handler: function (request, reply) {
+                            return reply.view('apiendpoints');
+                            }
+                        };
+
+          exports.map = {
+                                          handler:  (request, reply) => {
+                                                            return reply.view('map');
+                                                            }
+                                                          };
+          exports.map1 = {
+                                          handler:  (request, reply) => {
+                                                            return reply.view('map1');
+                                                          }
+                                                          };
+          exports.map2 = {
+                                          handler:  (request, reply) => {
+                                                            return reply.view('map2');
+                                          }
+                            };
+          exports.map3 = {
+                                        handler:  (request, reply) => {
+                                                            return reply.view('map3');
+                            }
+                            };
+          exports.map4 = {
+                                      handler:  (request, reply) => {
+                                                            return reply.view('map4');
+                            }
+                            };
+          exports.map5 = {
+                                      handler:  (request, reply) => {
+                                                            return reply.view('map5');
+                            }
+                            };
+          exports.map6 = {
+                                      handler:  (request, reply) => {
+                                                            return reply.view('map6');
+                            }
+                            };
+
+
+          </pre>
+          <hr>
+
+          <h3 class="heading">Pages JS (controller 2)</h3>
+            <font size="4" style=""><p>Handlers to dynamic pages</p></font>
+          <pre>
+            //routes to the default page
+            exports.index = {
+
+            	handler: function (request, reply) {
+            		return reply.view('index');
+            	}
+            };
+
+            /**
+             * Handles a call to /login and shows a login form
+             */
+            exports.login = {
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+
+            		if (request.auth.isAuthenticated) {
+            			// The user is already logged in, redirect it to the hideout
+            			//console.log(request.auth.credentials.username);
+            			return reply.redirect('/success');
+            		}
+
+               		return reply.view('login',{errorMessage: ""});
+            	}
+            };
+
+            //Allows users to save favourite list only after loggin in
+            exports.videosearch = {
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+
+            		if (request.auth.isAuthenticated) {
+
+            			return reply.view('videosearchmember', {usr: request.auth.credentials.username});
+            		}
+            		//if the visitor has not become a member yet
+            			return reply.view('videosearch',{errorMessage:""});
+            	}
+                              };
+
+            //Handles a call to /verify/* and shows a verification form
+
+            exports.verify = {
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+
+            		if (request.auth.isAuthenticated) {
+            			// The user is already logged in, redirect it to the hideout
+            			return reply.redirect('/success');
+            		}
+
+               		return reply.view('verify',{errorMessage: ""});
+            	}
+            };
+
+            /**
+             * Handles a call to /register and shows a registration form
+             */
+            exports.register = {
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+
+            		if (request.auth.isAuthenticated) {
+            			// The user is already logged in, redirect it to the hideout
+            			return reply.redirect('/success');
+            		}
+
+            		return reply.view('register',{errorMessage: ""});
+            	}
+            };
+
+
+            //Handles when user has logged in successfully and shows member stuff
+            exports.secret = {
+            	auth: 'session',
+
+            	handler: function (request, reply) {
+            	//	console.log(request.auth.credentials.username);
+            		if (request.auth.isAuthenticated) {
+            		return reply.view('favlist', {
+            			email: request.auth.credentials.email, userid: request.auth.credentials.username
+            		});
+            	}
+            		return reply.redirect('/login',{errorMessage: "Please log in."});
+            	}
+
+            };
+
+          </pre>
+          <hr>
+
+          <h3 class="heading">Authentication JS (controller 3)</h3>
+            <font size="4" style=""><p>Handlers to POST requests and the logout route</p></font>
+          <pre>
+            var Joi = require('joi');
+            var User = require('./user');
+
+            /**
+             * Responds to POST /login and logs the user in, well, soon.
+             */
+            exports.login = {
+              handler: function (request, reply) {
+                User.authenticate()(request.payload.username, request.payload.password, function (err, user, passwordError) {
+
+                  // There has been an error, do something with it. I just print it to console for demo purposes.
+                  if (err) {
+                    console.error(err);
+                    return reply.redirect('/login');
+                  }
+
+            //wrong password or username
+                  if (passwordError) {
+                    // For now, just show the error and login form
+                    console.log(passwordError);
+                    return reply.view('login', {
+                      errorMessage: passwordError.message
+                    });
+                  //  return reply({success:false, error:passwordError.message})
+                  }
+
+            //username and password match
+                  if(user){
+                    //if the account has not been verified
+                    if (user.token === 0){
+                    console.log('pls verify email');
+                    var message = "Please verify your account first";
+                    return reply.view('login', {
+                      errorMessage: message
+                    });}
+                    else{
+                      request.auth.session.set(user);
+                      console.log(request.payload.email + ' login successful and user token is' + user.token);
+                      return reply.redirect('/success');}
+                  }
+
+                  return reply.redirect('/login');
+
+                });
+              }
+            };
+
+            exports.Verification = {
+              handler: function (request, reply) {
+
+                User.authenticate()(request.payload.username, request.payload.password, function (err, user, passwordError) {
+
+                  // There has been an error, do something with it.
+                  if (err) {
+                    console.error(err);
+                    return reply.view('verify');
+                  }
+
+                  if (passwordError) {
+                    // For now, just show the error and login form
+                    console.log(passwordError);
+                    return reply.view('verify', {
+                      errorMessage: passwordError.message
+                    });
+                  }
+
+                  if(user.token === 1){
+                    var verifymessage = request.payload.username + " has been verified before";
+                    return reply.view('favlist', {
+                  email: user.email, userid: request.payload.username + verifymessage
+                  });}
+
+                  if(user){
+
+                      request.auth.session.set(user);
+                      var verifymessage = request.payload.username + " has been verified";
+                       User.update( {"username": request.payload.username}, { $set: { token: "1" } },
+                       function (err, data) {
+                           if (err) return console.error(err);
+                           console.log(request.payload.username);
+                           console.log(data);
+
+                       }
+                     );
+                     console.log(request.payload.username + ' login successful and user token is ' + user.token);
+
+                      return reply.view('favlist', {
+                  		email: user.email, userid: request.payload.username + verifymessage
+                  		});
+                  }
+
+                  return reply.redirect('/login');
+
+                });
+              }
+            };
+            /**
+             * Responds to GET /logout and logs out the user
+             */
+            exports.logout = {
+              auth: 'session',
+              handler: function (request, reply) {
+                request.auth.session.clear();
+                reply().redirect('/login');
+              }
+            };
+
+            /**
+             * Responds to POST /register and creates a new user.
+             */
+            exports.register = {
+              validate: {
+                payload: {
+                  username: Joi.string().required(),
+                  email: Joi.string().email().required(),
+                  password: Joi.string().required(),
+                  password_confirm: Joi.any().valid(Joi.ref('password')).required().options({ language: { any: { allowOnly: 'must match password' } } })
+
+                }
+              },
+              handler: function(request, reply) {
+
+              //generate authentication token
+            var randToken =Math.floor((Math.random() * 100) + 54);
+
+
+                // Create a new user, this is the place where you add firstName, lastName etc.
+                // Just don't forget to add them to the validator above.
+                var newUser = new User({
+                  username: request.payload.username,
+                  email: request.payload.email,
+                  vericode: randToken,
+                  token: 0
+                });
+
+                // The register function has been added by passport-local-mongoose and takes as first parameter
+                // the user object, as second the password it has to hash and finally a callback with user info.
+                User.register(newUser, request.payload.password, function(err, user) {
+                  // Return error if present
+                  if (err) {
+                    return reply(err);
+                  }
+
+            //prepare email verification link and send email
+                  var link = "http://127.0.0.1:8888" + "/verify/" + randToken;
+
+            const nodemailer = require('nodemailer');
+
+            // create reusable transporter object using the default SMTP transport
+            let transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: '305cdejoe@gmail.com',
+                    pass: '305CDEAssignment'
+                }
+            });
+
+            // setup email data with unicode symbols
+            let mailOptions = {
+                from: '"DO NOT REPLY" <joe305@cde.assignment>', // sender address
+                to: request.payload.email, // list of receivers
+                subject: 'Account verification email', // Subject line
+                //text: 'Hello world ?', // plain text body
+                html: "Hello,<br> Please Click on the link to verify your email with your <u>username</u> and <u>password</u>.<br><a href=" + link + ">Click here to verify</a>"
+               }
+
+            // send mail with defined transport object
+            transporter.sendMail(mailOptions, (error, info) => {
+                if (error) {
+                    return console.log(error);
+                }
+                console.log('Message %s sent: %s', info.messageId, info.response);
+            });
+                  console.log('registered');
+                  return reply.view('login', {errorMessage: 'Please check your mailbox to verify your account.'});
+                });
+              }
+            };
+
+            //loads fav list
+            exports.editfavlist = {
+
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+
+            		if (request.auth.isAuthenticated) {
+                  User.find({username: request.auth.credentials.username}, {fav:1},
+                      function (err, data) {
+                          if (err) return console.error(err);
+                          console.log(request.auth.credentials.username);
+                          console.log(data);
+                          return reply(data);
+
+                      }
+                  );
+            		}else{return reply.view('login',{errorMessage: "Members only. Pls login to continue."});}
+
+            	}
+            };
+
+            // add items to favlist
+            exports.addfav = {
+
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+            	if (request.auth.isAuthenticated) {
+            //use $saddtoset to avoid adding duplicated items into the fav list
+                User.update( {"username": request.auth.credentials.username}, { $addToSet: { "fav": {"videoId":request.params.videoId,"thumbnailsurl":request.payload.thumbnailsurl, "title":request.payload.title} } },
+                function (err, data) {
+                     if (err) return console.error(err);
+                    return reply(data);
+                 }
+             );
+            		}else{ return reply.view('login',{errorMessage: "Members only. Pls login to continue."}); }
+            	}
+
+            };
+
+            //remove videos from favouritelist
+            exports.removefav = {
+            //check if user has logged in
+            	auth: {
+            		mode: 'try',
+            		strategy: 'session'
+            	},
+            	handler: function (request, reply) {
+                console.log(request.params.videoId);
+            		if (request.auth.isAuthenticated) {
+                User.update( {"username": request.auth.credentials.username},  {$pull:{"fav":{"videoId":request.params.videoId}}},
+                 function (err, data) {
+                     if (err) return console.error(err);
+                    return reply(data);
+                 }
+             );
+            		}else{ return reply.view('login',{errorMessage: "Members only. Pls login to continue."}); }
+            	}
+            };
+
+
+          </pre>
+          <hr>
+
+          <h3 class="heading">User JS (model and schema)</h3>
+          <pre>var Mongoose = require('../database').Mongoose;
+          var salt;
+          var crypto = require('crypto');
+          //create the schema
+          var userSchema = new Mongoose.Schema({
+
+          	username: {
+              type: String,
+              required: true
+            },
+          	email: {
+              type: String,
+              required: true
+            },
+          	password: {
+              type: String,
+              required: true
+            },
+          	creationDate: {
+              type: Date,
+              required: true,
+              default: Date.now
+            },
+          	vericode: {
+          		type: String,
+          	},
+          	token: {
+          		type: Number,
+          		required: true
+          	},
+          	fav: [{_id:false, videoId: String, title: String, thumbnailsurl: String}]
+
+          });
+
+          userSchema.plugin(require('passport-local-mongoose'), {
+            usernameField: 'username',
+            hashField: 'password',
+            usernameLowerCase: true
+          });
+
+          //create the model and add it to the exports
+          module.exports = Mongoose.model('User', userSchema, 'Users');
+
+          </pre>
+          <hr>
+</div><!--//section-inner-->
+</div></section></body></html>

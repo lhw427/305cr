@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html ng-app="plunker">
+<head>
+  <link href='http://fonts.googleapis.com/css?family=Lato:100' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Rajdhani' rel='stylesheet' type='text/css'>
+    <!-- Material Design Lite CSS -->
+    <link rel="stylesheet" href="../public/css/material.indigo-pink.min.css">
+    <!-- Material Design icon font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <!-- Stylesheet for the page -->
+    <link rel="stylesheet" href="../public/css/favlist.css">
+</head>
+    <!-- AngularJS scripts -->
+    <script data-require="angular.js@1.2.x" src="https://code.angularjs.org/1.2.16/angular.js" data-semver="1.2.16"></script>
+    <script src="../public/library/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-resource.min.js"></script>
+
+
+  <body ng-controller="MainCtrl">
+    <p>You may search news about drugs here and sources comes from Wehbose.io API</p>
+    <div class="bar">
+      <!-- Create a binding between the searchString model and the text field -->
+      <input type="text" ng-model="search" placeholder="Enter the keywords (title, author etc.)" />
+      <button id="search" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-color--grey">search</button>
+
+    </div>
+
+    <!-- search results -->
+    <ul>
+			<li ng-repeat="project in projects | filter:search">
+				<p><a href="{{project.volumeInfo.selfLink}}" target="_blank"><img ng-src="{{project.volumeInfo.imageLinks.smallThumbnail}}" />{{project.volumeInfo.title}}. {{project.volumeInfo.title}}</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        </p>
+			</li>
+		</ul>
+
+<!--Angular script for searching-->
+    <script>
+
+    angular.module('plunker', ['ngRoute', 'ngResource'])
+
+// Controller
+.controller('MainCtrl', ['$scope', '$http', function ($scope, $http) {
+
+    $scope.search = ""; //search field left blank at the beginning
+    //if search field is not empty --> start searching
+    $scope.$watch('search', function() {
+      if ($scope.search != ""){fetch();};
+    });
+
+
+//search function
+    function fetch() {
+      $http.get("https://www.googleapis.com/books/v1/volumes?q=" + $scope.search +"&quotaUser=20")
+        .then(function(response) {
+          $scope.projects = response.data.items;
+        });
+    }
+
+    $scope.select = function() {
+      this.setSelectionRange(0, this.value.length);
+    }
+
+}])
+
+</script>
+  </body>
+
+</html>

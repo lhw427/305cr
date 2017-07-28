@@ -1,0 +1,169 @@
+
+
+<html><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+</head>
+
+  <body><section class="projects section">
+    <div class="section-inner col-lg-12">
+
+        <div class="content apiBox" style="background: #EEE;">
+
+          <h3 class="heading">User Registration</h3>
+          <pre>URI       https://127.0.0.1:8888/registration
+Method	  POST
+Data	  {
+              "username": "Yourname",
+              "email": "your@own.email",
+              "password": "yourownpw"
+          }
+Result	  {
+              "Registration": "Successful"
+          }
+Error	  {
+              "Registration": "fail"
+          }
+          </pre>
+          <hr>
+
+          <h3 class="heading">User Verification</h3>
+          <pre>URI       https://127.0.0.1:8888/verify/{vericode*}
+Method	  POST
+Data	  {
+              "username": "Yourname",
+              "password": "yourownpw"
+          }
+Result	  {
+              "username": "Yourname",
+              "email": "your@own.email",
+          }
+Error	  {
+              "Verification": "fail"
+          }</pre>
+          <hr>
+
+          <h3 class="heading">User login</h3>
+          <pre>
+URI       https://127.0.0.1:8888/login
+Method	  POST
+Data	  {
+              "username": "Yourname",
+              "password": "yourownpw"
+          }
+Result	  {
+              "username": "Yourname",
+              "email": "your@own.email",
+          }
+Error	  {
+              "login": "fail"
+          }
+          </pre>
+          <hr>
+
+          <h3 class="heading">Search Youtube Video (using Youtube Data API)</h3>
+          <pre>URI       https://127.0.0.1:8888/videos or https://127.0.0.1:8888/videosmember
+Method	  POST (client app only, server side is not needed)
+Data	  {
+            "title": "Quit Drugs Now"
+          }
+Result	  {
+            {
+              "videoId": U7oBrgO9ES0,
+              "thumbnailsurl": "//i1.ytimg.com/vi/U7oBrgO9ES0/mqdefault.jpg",
+              "title": "Quit Drugs Now",
+            }
+          }
+Error	  {
+          }</pre>
+          <hr>
+
+          <h3 class="heading">Loads favourite list</h3>
+          <pre>URI       https://127.0.0.1:8888/editfavlist
+Method	  GET
+Data	  {
+          "username": "Yourname",
+          "password": "yourownpw"
+}
+Result	[
+          {
+            "videoId": U7oBrgO9ES0,
+            "thumbnailsurl": "//i1.ytimg.com/vi/U7oBrgO9ES0/mqdefault.jpg",
+            "title": "Quit Drugs Now",
+          },
+          {
+            "videoId": nkMhiS2XveQ,
+            "thumbnailsurl": "//i1.ytimg.com/vi/nkMhiS2XveQ/mqdefault.jpg",
+            "title": "Friends",
+          }
+]
+Error	{
+}</pre>
+          <hr>
+
+          <h3 class="heading">Add items into favourite list</h3>
+          <pre>URI       https://127.0.0.1:8888/addfavlist
+Method	  PUT
+Data	  {
+          "username": "Yourname",
+          "add":  {
+            "videoId": Ci35L4_1j9c,
+            "thumbnailsurl": "//i1.ytimg.com/vi/Ci35L4_1j9c/mqdefault.jpg",
+            "title": "Positivity defeats drugs",
+                  }
+}
+Result	{
+          "username": "yourusername",
+          "fav": [
+                {
+                  "videoId": U7oBrgO9ES0,
+                  "thumbnailsurl": "//i1.ytimg.com/vi/U7oBrgO9ES0/mqdefault.jpg",
+                  "title": "Quit Drugs Now",
+                },
+                {
+                  "videoId": nkMhiS2XveQ,
+                  "thumbnailsurl": "//i1.ytimg.com/vi/nkMhiS2XveQ/mqdefault.jpg",
+                  "title": "Friends",
+                },
+                {
+                  "videoId": Ci35L4_1j9c,
+                  "thumbnailsurl": "//i1.ytimg.com/vi/Ci35L4_1j9c/mqdefault.jpg",
+                  "title": "Positivity defeats drugs",
+                }
+          ]
+}
+Error	{
+              "Add": "FAIL"
+}</pre>
+          <hr>
+          <h3 class="heading">Remove items from favourite list</h3>
+          <pre>URI       https://127.0.0.1:8888/removefavlist
+Method	  PUT
+Data	  {
+          "username": "Yourname",
+          "videoId": nkMhiS2XveQ
+}
+Result	{
+          "username": "Yourname",
+
+          "fav": [
+              {
+                "videoId": U7oBrgO9ES0,
+                "thumbnailsurl": "//i1.ytimg.com/vi/U7oBrgO9ES0/mqdefault.jpg",
+                "title": "Quit Drugs Now",
+                },
+                {
+                  "videoId": Ci35L4_1j9c,
+                  "thumbnailsurl": "//i1.ytimg.com/vi/Ci35L4_1j9c/mqdefault.jpg",
+                  "title": "Positivity defeats drugs",
+                }
+          ]
+}
+Error	{
+        "Add": "FAIL"
+}</pre>
+          <hr>
+
+</div><!--//section-inner-->
+</div></section></body></html>

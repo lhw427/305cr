@@ -1,0 +1,57 @@
+<style>
+#container{
+
+}
+
+#search-btn {
+  cursor: pointer;
+  zoom: 1;
+
+}
+
+#results {
+  padding: 10px 0;
+  list-style: none; /* get rid of bullets */
+  overflow: auto;
+}
+
+.list-left /*holds image*/ {
+  float: left;
+  width: 20%;
+}
+
+.list-left img {
+  width: 100%;
+  padding: 3px;
+  border: solid #ccc 1px;
+}
+
+.list-right {
+  width: 78%;
+  float: right;
+}
+
+.cTitle {
+  color: #dd2826;
+}
+</style>
+
+<body class='container'>
+  <div id=container class='text-center jumbotron'>
+    <header>
+      <h1 class='container'>YouTube Video Search</h1>
+    </header>
+    <section>
+      <form id='searchForm' name='searchForm' onsubmit='return search()'>
+        <div class='fieldContainer form-inline'>
+          <input type='search' id='query' class='searchField form-control' placeholder='Search YouTube...'>
+          <button type='search' name='search-btn' id='search-btn' value='' class='btn btn-default'><i class="fa fa-search" aria-hidden="true"></i></button>
+        </div>
+      </form>
+      <div id='results' class='text-left'></div>
+      <div id="buttons"></div>
+  </div>
+</body>
+<script>
+
+</script>

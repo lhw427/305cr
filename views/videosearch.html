@@ -1,0 +1,113 @@
+<html ng-app="youSearch">
+<head>
+  <!-- Stylesheet for the page-->
+  <meta charset="UTF-8">
+  <title>Youtube Search</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.6/angular.min.js"></script>
+  <script>
+    var init = function() {
+      window.initGapi();
+    }
+  </script>
+  <script src="https://apis.google.com/js/client.js?onload=init"></script>
+
+</head>
+
+<body ng-controller="Controller">
+  <div id="content" ng-if="videos">
+    <div class="search-panel">
+      <div class="search-form">
+        <form>
+          <input id="query" type="text" ng-model="q"/>
+          <button id="search" ng-disabled="!videos" ng-click="search(q, sortByName)">Search</button>
+        </form>
+        <div>
+          <span>Sort by name</span>
+          <input type="checkbox" ng-checked="sortByName" ng-model="sortByName">
+        </div>
+      </div>
+      <div class="filter-form">
+        <div>
+          <label for="filter">Filter by name</label>
+          <input type="text" ng-model="query">
+        </div>
+        <button ng-click="sortByProperty('snippet.title')">Sort by name</button>
+      </div>
+    </div>
+
+    <div class="search-results">
+      <h1>Videos</h1>
+      <ul>
+        <li ng-repeat="video in videos | startFrom:currentPage*itemsPerPage | limitTo:itemsPerPage | filter:query">
+          <a href="https://www.youtube.com/watch?v={{ video.id.videoId }}">
+            <img ng-if="video.snippet.thumbnails.default" ng-src="{{ video.snippet.thumbnails.default.url }}">
+            <p class="title">{{ video.snippet.title }}</p>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</body>
+<script>
+(function() {
+  'use strict';
+
+  angular.module('youSearch', [])
+  .controller('Controller', ['$scope', '$filter', '$window', 'gapiService', function($scope, $filter, $window, gapiService) {
+
+    angular.extend($scope, {
+      currentPage: 0,
+      resultsQuantity: 10,
+      itemsPerPage: 10,
+      videos: false,
+      sortByName: false,
+      q: 'Spring MVC',
+
+      search: function(q, sort) {
+        var api_key = 'AIzaSyA33T28NbgnC4eDfyfLT1QFiZdzvKrNfUA';
+        var request = gapi.client.youtube.search.list({
+          key: api_key,
+          q: q || $scope.q,
+          part: 'snippet',
+          maxResults: $scope.resultsQuantity
+        });
+
+        request.execute(function(response) {
+          $scope.videos = response.items;
+          if (sort) $scope.sortByProperty('snippet.title');
+          $scope.$apply();
+        });
+      },
+
+      sortByProperty: function(property) {
+        $scope.videos = $filter('orderBy')($scope.videos, property);
+      }
+
+    })
+
+    var doStuff = function() {
+      $scope.videos = true;
+      $scope.search();
+    }
+
+    $window.initGapi = function() {
+      gapiService.initGapi(doStuff);
+    }
+
+  }])
+  .service('gapiService', function() {
+    this.initGapi = function(doStuff) {
+      gapi.client.load('youtube', 'v3', doStuff)
+    }
+  })
+  .filter('startFrom', function() {
+    return function(arr, start) {
+      arr = arr || [];
+      start = +start;
+      return arr.slice(start);
+    }
+  })
+
+})()
+</script>
+</html>

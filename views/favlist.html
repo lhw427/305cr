@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html ng-app="plunker">
+<head>
+  <title>Youtube Search</title>
+    <!-- Material Design Lite CSS -->
+    <link rel="stylesheet" href="../public/css/material.indigo-pink.min.css">
+    <!-- Material Design icon font -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+    <style>
+    a:link {
+    color: blue;
+}
+
+/* visited link */
+a:visited {
+    color: green;
+}
+
+/* mouse over link */
+a:hover {
+    color: hotpink;
+}
+
+/* selected link */
+a:active {
+    color: blue;
+}
+    * {
+      padding: 0px;
+      margin: 0px;
+    }
+    body {
+      font-size: 14px;
+    }
+    input {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      margin-bottom: 5px;
+    }
+    button {
+      background-color: #fff;
+      border-color: #ccc;
+      border: 1px solid #ccc;
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    #content {
+      width: 1000px;
+      margin: 0 auto;
+    }
+    .search-panel {
+      height: 80px;
+      border-radius: 10px;
+      padding: 10px;
+      background: rgb(233, 241, 246);
+      background: -moz-linear-gradient(top, rgb(233, 241, 246) 0%, #fff 100%);
+      background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgb(233, 241, 246)), color-stop(100%,#fff));
+      background: -webkit-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+      background: -o-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+      background: -ms-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+      background: linear-gradient(to bottom, rgb(233, 241, 246) 0%,#fff 100%);
+    }
+    .search-panel > div {
+      width: 50%;
+      float: left;
+    }
+    .search-panel label,
+    .search-panel button {
+      width: 150px;
+    }
+    .search-panel .filter-form button {
+      margin-left: 85px;
+    }
+    .search-results h1 {
+      color: rgb(11, 42, 78);
+      border-bottom: 1px solid rgb(235, 240, 246);
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+    }
+    .search-results ul {
+      border: 1px solid rgb(235, 240, 246);
+      border-radius: 10px;
+      list-style-type: none;
+      padding: 25px;
+
+    }
+    .search-results ul li {
+      margin-bottom: 15px;
+    }
+    .search-results ul li a {
+      text-decoration: none;
+    }
+    .search-results ul li img {
+      max-width: 120px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .search-results ul li .title {
+      display: inline-block;
+      vertical-align: middle;
+      text-decoration: underline;
+      color: rgb(11, 42, 78);
+      padding-left: 15px;
+    }
+    </style>
+</head>
+    <script data-require="angular.js@1.2.x" src="https://code.angularjs.org/1.2.16/angular.js" data-semver="1.2.16"></script>
+
+    <script src="../public/library/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-resource.min.js"></script>
+  <body ng-controller="MainCtrl">
+    <div class="search-panel" align="center">
+    <br><br><p align="center"><font size=5>Welcome! <%= userid %>, your email is <%=email%>.
+    <br><br><a href="/logout">Logout</a></font></p>
+
+
+    <p align="center">  <font size=3><u>My Favourite List</u></font><br>Just filter and remove your videos from your favourite list below.</p>
+      <!-- Create a binding between the searchString model and the text field -->
+      <input type="text" ng-model="query" style="width: 300px;" placeholder="Enter the name of the video" />
+<br><br>
+  <div style="width: 600px;">
+    <ul>
+			<li ng-repeat="video in videos | filter:query">
+				<p>&nbsp;&nbsp;&nbsp;<a href="{{video.videoId}}" target="_blank"><img ng-src="{{video.thumbnailsurl}}" /> {{video.title}}</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <button confirmed-click="removeitem($index)" ng-confirm-click="Are you sure to remove this video from the favourite list?" style="right: 100;" class="mdl-button mdl-js-button mdl-button--icon mdl-button--accent">
+        <i class="material-icons">delete</i>
+        </button>
+        <font color="#ffffff">{{video.videoId}}</font>
+        </p>
+			</li>
+		</ul>
+  </div>
+    </div>
+  </body>
+    <script>
+
+    angular.module('plunker', ['ngRoute', 'ngResource'])
+
+    .factory('Todos', ['$http', function($http){
+        return $http.get('/editfavlist/');
+  }])
+
+// Controller
+.controller('MainCtrl', ['$scope', '$http', 'Todos', '$window', function ($scope, $http, Todos) {
+
+  //loads favourite list content
+Todos.success(function(data){
+  $scope.videos = data[0].fav;
+}).error(function(data, status){
+console.log(data, status);
+$scope.videos = [];
+});
+
+$scope.removeitem = function(index){
+  var todo = $scope.videos[index].videoId;
+      $http.put('/removefavlist/' + todo, todo);
+              $scope.videos.splice(index, 1);
+              $window.alert('Video has been removed from the favourite list.');
+};
+
+}])
+
+
+.directive('ngConfirmClick', [
+        function(){
+            return {
+                link: function (scope, element, attr) {
+                    var msg = attr.ngConfirmClick || "Confirmed?";
+                    var clickAction = attr.confirmedClick;
+                    element.bind('click',function (event) {
+                        if ( window.confirm(msg) ) {
+                            scope.$eval(clickAction)
+                        }
+                    });
+                }
+            };
+    }])
+
+</script>
+
+
+</html>

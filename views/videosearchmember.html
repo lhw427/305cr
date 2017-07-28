@@ -1,0 +1,252 @@
+<html ng-app="youSearch">
+<head>
+  <!-- Stylesheet for the page-->
+  <meta charset="UTF-8">
+  <title>Youtube Search</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.6/angular.min.js"></script>
+  <script>
+    var init = function() {
+      window.initGapi();
+    }
+  </script>
+  <script data-require="angular.js@1.2.x" src="https://code.angularjs.org/1.2.16/angular.js" data-semver="1.2.16"></script>
+
+  <script src="https://apis.google.com/js/client.js?onload=init"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-route.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.25/angular-resource.min.js"></script>
+
+
+</head>
+<style>
+* {
+  padding: 0px;
+  margin: 0px;
+}
+body {
+  font-size: 14px;
+}
+input {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 5px;
+}
+button {
+  background-color: #fff;
+  border-color: #ccc;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+#content {
+  width: 1000px;
+  margin: 0 auto;
+}
+.search-panel {
+  height: 80px;
+  border-radius: 10px;
+  padding: 10px;
+  background: rgb(233, 241, 246);
+  background: -moz-linear-gradient(top, rgb(233, 241, 246) 0%, #fff 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgb(233, 241, 246)), color-stop(100%,#fff));
+  background: -webkit-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: -o-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: -ms-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: linear-gradient(to bottom, rgb(233, 241, 246) 0%,#fff 100%);
+}
+.search-panel > div {
+  width: 50%;
+  float: left;
+}
+.search-panel label,
+.search-panel button {
+  width: 150px;
+}
+.search-panel .filter-form button {
+  margin-left: 85px;
+}
+.search-results h1 {
+  color: rgb(11, 42, 78);
+  border-bottom: 1px solid rgb(235, 240, 246);
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+}
+.search-results ul {
+  border: 1px solid rgb(235, 240, 246);
+  border-radius: 10px;
+  list-style-type: none;
+  padding: 25px;
+  background: rgb(233, 241, 246);
+  background: -moz-linear-gradient(top, rgb(233, 241, 246) 0%, #fff 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%, rgb(233, 241, 246)), color-stop(100%,#fff));
+  background: -webkit-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: -o-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: -ms-linear-gradient(top, rgb(233, 241, 246) 0%,#fff 100%);
+  background: linear-gradient(to bottom, rgb(233, 241, 246) 0%,#fff 100%);
+}
+.search-results ul li {
+  margin-bottom: 15px;
+}
+.search-results ul li a {
+  text-decoration: none;
+}
+.search-results ul li img {
+  max-width: 120px;
+  display: inline-block;
+  vertical-align: middle;
+}
+.search-results ul li .title {
+  display: inline-block;
+  vertical-align: middle;
+  text-decoration: underline;
+  color: rgb(11, 42, 78);
+  padding-left: 15px;
+}
+#pager {
+  padding: 10px;
+}
+#pager span {
+  margin: 0 10px;
+  text-decoration: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+#pager span.active {
+  color: red;
+  font-weight: bold;
+}
+
+</style>
+<body ng-controller="Controller">
+  <div id="content" ng-if="videos">
+    <div class="search-panel">
+      <div class="search-form">
+        <form>
+          <input id="query" type="text" ng-model="q"/>
+          <button id="search" ng-disabled="!videos" ng-click="search(q, sortByName)">Search</button>
+        </form>
+        <div>
+          <span>Sort by name</span>
+          <input type="checkbox" ng-checked="sortByName" ng-model="sortByName">
+        </div>
+      </div>
+      <div class="filter-form">
+        <div>
+          <label for="filter">Filter by name</label>
+          <input type="text" ng-model="query">
+        </div>
+        <button ng-click="sortByProperty('snippet.title')">Sort by name</button>
+      </div>
+    </div>
+
+    <div class="search-results">
+      <h1>Videos</h1>
+      <ul>
+        <li ng-repeat="video in videos | startFrom:currentPage*itemsPerPage | limitTo:itemsPerPage | filter:query">
+          <a href="https://www.youtube.com/watch?v={{ video.id.videoId }}">
+            <img ng-if="video.snippet.thumbnails.default" ng-src="{{ video.snippet.thumbnails.default.url }}">
+            <p class="title"> {{ video.snippet.title }}
+          </a>
+          <button style="position: absolute; right: 100;" confirmed-click="additem($index)" ng-confirm-click="Add this recipe into your fav list?" style="position: absolute; right: 100;" class="mdl-button mdl-button--raised mdl-button--accent">
+          <i class="material-icons">add</i>
+          </button></p>
+        </li>
+      </ul>
+      <div id="pager"> <!--display page numbers of the search results-->
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+
+  angular.module('youSearch', ['ngResource'])
+
+  .factory('Todos', ['$http', function($http){
+}])
+
+  .controller('Controller', ['$scope', '$http',  '$window', '$filter', 'gapiService', function($scope, $http, $window, $filter, gapiService) {
+
+      $scope.currentPage = 0;
+      $scope.resultsQuantity= 10;
+      $scope.itemsPerPage= 10;
+      $scope.videos= false;
+      $scope.sortByName= false;
+      $scope.q= 'Spring MVC';
+
+      $scope.search = function(q, sort) {
+        var api_key = 'AIzaSyA33T28NbgnC4eDfyfLT1QFiZdzvKrNfUA';
+        var request = gapi.client.youtube.search.list({
+          key: api_key,
+          q: q || $scope.q,
+          part: 'snippet',
+          maxResults: $scope.resultsQuantity
+        });
+
+        request.execute(function(response) {
+          $scope.videos = response.items;
+          if (sort) $scope.sortByProperty('snippet.title');
+          $scope.$apply();
+        });
+      };
+
+      $scope.select = function() {
+        this.setSelectionRange(0, this.value.length);
+      };
+
+      $scope.additem = function(index){
+        var todo = $scope.videos[index].id.videoId;
+        var dataObj = {
+        thumbnailsurl : $scope.videos[index].snippet.thumbnails.default.url,
+        title : $scope.videos[index].snippet.title
+        };
+        $http.put('/addfavlist/' + todo, dataObj);
+        $window.alert('Video has been added to the favourite list.');
+
+      };
+
+      $scope.sortByProperty = function(property) {
+        $scope.videos = $filter('orderBy')($scope.videos, property);
+      };
+
+
+    var doStuff = function() {
+      $scope.videos = true;
+      $scope.search();
+    }
+
+    $window.initGapi = function() {
+      gapiService.initGapi(doStuff);
+    }
+
+  }])
+
+  .service('gapiService', function() {
+    this.initGapi = function(doStuff) {
+      gapi.client.load('youtube', 'v3', doStuff)
+    }
+  })
+
+  .filter('startFrom', function() {
+    return function(arr, start) {
+      arr = arr || [];
+      start = +start;
+      return arr.slice(start);
+    }
+  })
+
+  .directive('ngConfirmClick', [
+          function(){
+              return {
+                  link: function (scope, element, attr) {
+                      var msg = attr.ngConfirmClick || "Are you sure?";
+                      var clickAction = attr.confirmedClick;
+                      element.bind('click',function (event) {
+                          if ( window.confirm(msg) ) {
+                              scope.$eval(clickAction)
+                          }
+                      });
+                  }
+              };
+      }])
+</script>
+</html>

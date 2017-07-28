@@ -1,0 +1,53 @@
+<html>
+<head>
+<style>
+
+body {
+    margin: 0px;
+    padding: 0px;
+     height: auto;
+    background-size: 100%;
+}
+#wrapper {
+  display: inline-block;
+  position: relative;
+  left: 50%;
+  margin: 50px 0;
+  transform: translate(-50%, 0);
+  background-image: url("../public/image/aboutdrugabuse.jpg");
+  background-color: #fefffa;
+  max-width: 800px;
+  padding: 30px;
+}
+@media (max-width: 800px) {
+  #wrapper {
+    box-sizing: border-box;
+    transform: translate(0, 0);
+    max-width: 100%;
+    margin: 0;
+    left: 0;
+  }
+}
+</style>
+</head>
+
+<body>
+
+
+        <div id="wrapper" align="center">
+          <h1 align="center"><font size="20">Anti Drug Abuse</h1></font>
+            <p><font size="15">Members' Area</font></p>
+       <p>
+         <font color=#ffffff>Join us today and enjoy various kinds of benefits from us!
+       <p> Would you like to
+       <a class="one" href="login" onclick="window.open('login', 'newwindow', 'width=800,height=700');return false;">login</a>
+
+         or
+
+       <a class="one" href="register" onclick="window.open('register', 'newwindow', 'width=700,height=700');return false;">
+       register</a>?</font>
+       </p>
+        </div>
+</body>
+
+</html>

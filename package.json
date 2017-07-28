@@ -1,0 +1,23 @@
+{
+  "name": "AntiDrug",
+  "version": "1.0.0",
+  "description": "This anti-drug abuse website is built with Hapi, Hapi-auth-cookie, and Mongoose with Youtube Data API and Google Map API",
+  "main": "server.js",
+  "scripts": {
+  "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Joe Leung",
+  "dependencies": {
+    "ejs": "*",
+    "hapi": "^10.4.0",
+    "hapi-auth-cookie": "^5.1.0",
+    "joi": "^7.0.0",
+    "mongoose": "^5.0.0",
+    "passport-local-mongoose": "^4.0.0",
+    "vision": "^4.0.0",
+    "inert":"*",
+    "nodemailer":"*",
+    "jsonfile":"*"
+
+  }
+}
